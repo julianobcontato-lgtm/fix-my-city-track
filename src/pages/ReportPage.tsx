@@ -38,6 +38,42 @@ export default function ReportPage() {
     setStep("success");
   };
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocalização não suportada neste dispositivo.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoords({ lat: latitude, lng: longitude });
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+          );
+          const data = await res.json();
+          if (data.display_name) {
+            setAddress(data.display_name.split(",").slice(0, 3).join(",").trim());
+          }
+        } catch {
+          toast.info("Localização capturada, mas não foi possível obter o endereço.");
+        }
+        setLocating(false);
+        toast.success("Localização capturada!");
+      },
+      (error) => {
+        setLocating(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("Permissão de localização negada.");
+        } else {
+          toast.error("Não foi possível obter a localização.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   return (
     <div className="flex min-h-screen flex-col pb-20">
       {/* Header */}
