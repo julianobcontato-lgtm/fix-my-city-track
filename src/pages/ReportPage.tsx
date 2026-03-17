@@ -142,6 +142,24 @@ export default function ReportPage() {
                   maxLength={200}
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                disabled={locating}
+                className="mt-2 flex items-center gap-1.5 text-sm font-medium text-primary active-press disabled:opacity-50"
+              >
+                {locating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />
+                ) : (
+                  <Locate className="h-4 w-4" strokeWidth={1.5} />
+                )}
+                {locating ? "Obtendo localização..." : "Usar minha localização"}
+              </button>
+              {coords && (
+                <p className="mt-1 text-xs text-muted-foreground tabular-nums">
+                  📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                </p>
+              )}
             </div>
 
             {/* Description */}
