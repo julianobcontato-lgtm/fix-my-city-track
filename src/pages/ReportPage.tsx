@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Camera, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Camera, MapPin, CheckCircle2, Locate, Loader2 } from "lucide-react";
 import { type RequestCategory, categoryLabels, categoryIcons } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,8 @@ export default function ReportPage() {
   const [category, setCategory] = useState<RequestCategory | null>(null);
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [protocol, setProtocol] = useState("");
 
   const handleSubmit = () => {
@@ -34,6 +36,42 @@ export default function ReportPage() {
     const newProtocol = `ZEL-2026-${Math.floor(Math.random() * 9000) + 1000}`;
     setProtocol(newProtocol);
     setStep("success");
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocalização não suportada neste dispositivo.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoords({ lat: latitude, lng: longitude });
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+          );
+          const data = await res.json();
+          if (data.display_name) {
+            setAddress(data.display_name.split(",").slice(0, 3).join(",").trim());
+          }
+        } catch {
+          toast.info("Localização capturada, mas não foi possível obter o endereço.");
+        }
+        setLocating(false);
+        toast.success("Localização capturada!");
+      },
+      (error) => {
+        setLocating(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("Permissão de localização negada.");
+        } else {
+          toast.error("Não foi possível obter a localização.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   return (
@@ -104,6 +142,24 @@ export default function ReportPage() {
                   maxLength={200}
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                disabled={locating}
+                className="mt-2 flex items-center gap-1.5 text-sm font-medium text-primary active-press disabled:opacity-50"
+              >
+                {locating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />
+                ) : (
+                  <Locate className="h-4 w-4" strokeWidth={1.5} />
+                )}
+                {locating ? "Obtendo localização..." : "Usar minha localização"}
+              </button>
+              {coords && (
+                <p className="mt-1 text-xs text-muted-foreground tabular-nums">
+                  📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                </p>
+              )}
             </div>
 
             {/* Description */}
