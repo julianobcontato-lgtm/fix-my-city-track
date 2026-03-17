@@ -16,6 +16,8 @@ export default function ReportPage() {
   const [category, setCategory] = useState<RequestCategory | null>(null);
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [protocol, setProtocol] = useState("");
 
   const handleSubmit = () => {
