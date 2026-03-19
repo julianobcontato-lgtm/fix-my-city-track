@@ -112,6 +112,14 @@ export default function SolvedPage() {
             transition={{ type: "spring", damping: 25, stiffness: 200, delay: i * 0.05 }}
             className="overflow-hidden rounded-lg bg-card shadow-card"
           >
+            {/* Before/After photos */}
+            {mockPhotos[req.id] && (
+              <BeforeAfterSlider
+                beforeSrc={mockPhotos[req.id].before}
+                afterSrc={mockPhotos[req.id].after}
+              />
+            )}
+
             {/* Card header */}
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
