@@ -1,9 +1,10 @@
-import { Home, ClipboardList, User } from "lucide-react";
+import { Home, CheckCircle2, ClipboardList, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", icon: Home, label: "Início" },
+  { to: "/solved", icon: CheckCircle2, label: "Resolvidos" },
   { to: "/requests", icon: ClipboardList, label: "Pedidos" },
   { to: "/profile", icon: User, label: "Perfil" },
 ];
