@@ -135,6 +135,29 @@ export default function ReportPage() {
               </div>
             </div>
 
+            {/* Urgency */}
+            <div className="mt-5">
+              <p className="mb-3 text-sm font-semibold text-foreground">Nível de Urgência</p>
+              <div className="grid grid-cols-2 gap-2">
+                {urgencyLevels.map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setUrgency(level)}
+                    className={`flex items-center gap-2 rounded-lg border p-3 transition-colors active-press ${
+                      urgency === level
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    <span className={`text-sm font-semibold ${urgencyColors[level]}`}>●</span>
+                    <span className="text-sm font-medium text-card-foreground">
+                      {urgencyLabels[level]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Address */}
             <div className="mt-5">
               <label className="mb-2 block text-sm font-semibold text-foreground">Endereço</label>
