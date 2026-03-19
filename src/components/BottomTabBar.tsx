@@ -1,10 +1,11 @@
-import { Map, ClipboardList, User } from "lucide-react";
+import { Home, MapPin, ClipboardList, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { to: "/", icon: Map, label: "Mapa" },
-  { to: "/requests", icon: ClipboardList, label: "Meus Pedidos" },
+  { to: "/", icon: Home, label: "Início" },
+  { to: "/map", icon: MapPin, label: "Mapa" },
+  { to: "/requests", icon: ClipboardList, label: "Pedidos" },
   { to: "/profile", icon: User, label: "Perfil" },
 ];
 
