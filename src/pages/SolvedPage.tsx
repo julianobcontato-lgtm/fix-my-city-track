@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, MessageCircle, Share2, Send, Clock } from "lucide-react";
-import { mockRequests, categoryLabels, categoryIcons, statusLabels } from "@/lib/mock-data";
+import { mockRequests, categoryLabels, categoryIcons } from "@/lib/mock-data";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { toast } from "sonner";
+
+import beforeBuraco from "@/assets/before-buraco.jpg";
+import afterBuraco from "@/assets/after-buraco.jpg";
+import beforeCalcada from "@/assets/before-calcada.jpg";
+import afterCalcada from "@/assets/after-calcada.jpg";
+
+const mockPhotos: Record<string, { before: string; after: string }> = {
+  "1": { before: beforeBuraco, after: afterBuraco },
+  "4": { before: beforeCalcada, after: afterCalcada },
+};
 
 interface Comment {
   id: string;
