@@ -35,6 +35,10 @@ export default function ReportPage() {
       toast.error("Informe o endereço.");
       return;
     }
+    if (!urgency) {
+      toast.error("Selecione o nível de urgência.");
+      return;
+    }
     const newProtocol = `ZEL-2026-${Math.floor(Math.random() * 9000) + 1000}`;
     setProtocol(newProtocol);
     setStep("success");
