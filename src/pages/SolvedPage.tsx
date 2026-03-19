@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, MessageCircle, Share2, Send, Clock } from "lucide-react";
-import { mockRequests, categoryLabels, categoryIcons, statusLabels } from "@/lib/mock-data";
+import { mockRequests, categoryLabels, categoryIcons } from "@/lib/mock-data";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { toast } from "sonner";
+
+import beforeBuraco from "@/assets/before-buraco.jpg";
+import afterBuraco from "@/assets/after-buraco.jpg";
+import beforeCalcada from "@/assets/before-calcada.jpg";
+import afterCalcada from "@/assets/after-calcada.jpg";
+
+const mockPhotos: Record<string, { before: string; after: string }> = {
+  "1": { before: beforeBuraco, after: afterBuraco },
+  "4": { before: beforeCalcada, after: afterCalcada },
+};
 
 interface Comment {
   id: string;
@@ -101,6 +112,14 @@ export default function SolvedPage() {
             transition={{ type: "spring", damping: 25, stiffness: 200, delay: i * 0.05 }}
             className="overflow-hidden rounded-lg bg-card shadow-card"
           >
+            {/* Before/After photos */}
+            {mockPhotos[req.id] && (
+              <BeforeAfterSlider
+                beforeSrc={mockPhotos[req.id].before}
+                afterSrc={mockPhotos[req.id].after}
+              />
+            )}
+
             {/* Card header */}
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
