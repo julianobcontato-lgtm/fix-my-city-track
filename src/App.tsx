@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import HomePage from "./pages/HomePage";
-
+import SolvedPage from "./pages/SolvedPage";
 import RequestsPage from "./pages/RequestsPage";
 import RequestDetailPage from "./pages/RequestDetailPage";
 import ReportPage from "./pages/ReportPage";
