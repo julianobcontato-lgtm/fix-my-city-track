@@ -21,7 +21,6 @@ const App = () => (
         <div className="mx-auto min-h-screen max-w-lg bg-background">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/map" element={<MapPage />} />
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/requests/:id" element={<RequestDetailPage />} />
             <Route path="/report" element={<ReportPage />} />
