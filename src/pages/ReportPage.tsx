@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const categories: RequestCategory[] = ["buraco", "iluminacao", "lixo", "calcada", "sinalizacao", "outros"];
+const urgencyLevels: UrgencyLevel[] = ["baixa", "media", "urgente", "critica"];
 
 export default function ReportPage() {
   const navigate = useNavigate();
