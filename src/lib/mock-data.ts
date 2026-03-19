@@ -2,6 +2,22 @@ export type RequestStatus = "pending" | "progress" | "resolved";
 
 export type RequestCategory = "buraco" | "iluminacao" | "lixo" | "calcada" | "sinalizacao" | "outros";
 
+export type UrgencyLevel = "baixa" | "media" | "urgente" | "critica";
+
+export const urgencyLabels: Record<UrgencyLevel, string> = {
+  baixa: "Pouco urgente",
+  media: "Moderado",
+  urgente: "Urgente",
+  critica: "Crítico",
+};
+
+export const urgencyColors: Record<UrgencyLevel, string> = {
+  baixa: "text-status-resolved",
+  media: "text-status-progress",
+  urgente: "text-status-pending",
+  critica: "text-destructive",
+};
+
 export interface ServiceRequest {
   id: string;
   protocol: string;

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Camera, MapPin, CheckCircle2, Locate, Loader2 } from "lucide-react";
-import { type RequestCategory, categoryLabels, categoryIcons } from "@/lib/mock-data";
+import { type RequestCategory, type UrgencyLevel, categoryLabels, categoryIcons, urgencyLabels, urgencyColors } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const categories: RequestCategory[] = ["buraco", "iluminacao", "lixo", "calcada", "sinalizacao", "outros"];
+const urgencyLevels: UrgencyLevel[] = ["baixa", "media", "urgente", "critica"];
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function ReportPage() {
   const [category, setCategory] = useState<RequestCategory | null>(null);
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
+  const [urgency, setUrgency] = useState<UrgencyLevel | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [protocol, setProtocol] = useState("");
@@ -31,6 +33,10 @@ export default function ReportPage() {
     }
     if (!address.trim()) {
       toast.error("Informe o endereço.");
+      return;
+    }
+    if (!urgency) {
+      toast.error("Selecione o nível de urgência.");
       return;
     }
     const newProtocol = `ZEL-2026-${Math.floor(Math.random() * 9000) + 1000}`;
@@ -123,6 +129,29 @@ export default function ReportPage() {
                     <span className="text-xl">{categoryIcons[cat]}</span>
                     <span className="text-[11px] font-medium leading-tight text-card-foreground">
                       {categoryLabels[cat]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Urgency */}
+            <div className="mt-5">
+              <p className="mb-3 text-sm font-semibold text-foreground">Nível de Urgência</p>
+              <div className="grid grid-cols-2 gap-2">
+                {urgencyLevels.map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setUrgency(level)}
+                    className={`flex items-center gap-2 rounded-lg border p-3 transition-colors active-press ${
+                      urgency === level
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    <span className={`text-sm font-semibold ${urgencyColors[level]}`}>●</span>
+                    <span className="text-sm font-medium text-card-foreground">
+                      {urgencyLabels[level]}
                     </span>
                   </button>
                 ))}
