@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Camera, MapPin, CheckCircle2, Locate, Loader2 } from "lucide-react";
-import { type RequestCategory, categoryLabels, categoryIcons } from "@/lib/mock-data";
+import { type RequestCategory, type UrgencyLevel, categoryLabels, categoryIcons, urgencyLabels, urgencyColors } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
