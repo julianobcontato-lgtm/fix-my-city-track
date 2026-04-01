@@ -16,6 +16,7 @@ const categories: RequestCategory[] = ["buraco", "iluminacao", "lixo", "calcada"
 const urgencyLevels: UrgencyLevel[] = ["baixa", "media", "urgente", "critica"];
 
 export default function ReportPage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<"form" | "success">("form");
   const [category, setCategory] = useState<RequestCategory | null>(null);
@@ -24,6 +25,7 @@ export default function ReportPage() {
   const [urgency, setUrgency] = useState<UrgencyLevel | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [protocol, setProtocol] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [cpf, setCpf] = useState("");
