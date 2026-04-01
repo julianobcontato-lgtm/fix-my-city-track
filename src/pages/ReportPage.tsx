@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Camera, MapPin, CheckCircle2, Locate, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, MapPin, CheckCircle2, Locate, Loader2, EyeOff, ShieldCheck } from "lucide-react";
 import { type RequestCategory, type UrgencyLevel, categoryLabels, categoryIcons, urgencyLabels, urgencyColors } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { validateCPF, formatCPF, containsInappropriateContent } from "@/lib/content-filter";
 
 const categories: RequestCategory[] = ["buraco", "iluminacao", "lixo", "calcada", "sinalizacao", "outros"];
 const urgencyLevels: UrgencyLevel[] = ["baixa", "media", "urgente", "critica"];
@@ -21,6 +23,8 @@ export default function ReportPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [protocol, setProtocol] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
+  const [cpf, setCpf] = useState("");
 
   const handleSubmit = () => {
     if (!category) {
@@ -31,12 +35,28 @@ export default function ReportPage() {
       toast.error("Descreva o problema.");
       return;
     }
+    if (containsInappropriateContent(description)) {
+      toast.error("Sua descrição contém conteúdo impróprio. Por favor, revise o texto.");
+      return;
+    }
     if (!address.trim()) {
       toast.error("Informe o endereço.");
       return;
     }
+    if (containsInappropriateContent(address)) {
+      toast.error("O endereço contém conteúdo impróprio. Por favor, revise.");
+      return;
+    }
     if (!urgency) {
       toast.error("Selecione o nível de urgência.");
+      return;
+    }
+    if (!cpf.trim()) {
+      toast.error("Informe seu CPF.");
+      return;
+    }
+    if (!validateCPF(cpf)) {
+      toast.error("CPF inválido. Verifique o número informado.");
       return;
     }
     const newProtocol = `ZEL-2026-${Math.floor(Math.random() * 9000) + 1000}`;
@@ -112,8 +132,44 @@ export default function ReportPage() {
               </div>
             </div>
 
+            {/* Anonymous toggle */}
+            <div className="mt-5 flex items-center justify-between rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center gap-3">
+                <EyeOff className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Denúncia anônima</p>
+                  <p className="text-xs text-muted-foreground">Seu nome não será exibido publicamente</p>
+                </div>
+              </div>
+              <Switch checked={anonymous} onCheckedChange={setAnonymous} />
+            </div>
+            {anonymous && (
+              <div className="mt-2 flex items-start gap-2 rounded-lg bg-primary/5 p-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground">
+                  Sua identidade será protegida. O CPF é necessário apenas para validação e <strong>não será divulgado</strong>.
+                </p>
+              </div>
+            )}
+
+            {/* CPF */}
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-semibold text-foreground">CPF <span className="text-destructive">*</span></label>
+              <Input
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCPF(e.target.value))}
+                className="tabular-nums"
+                maxLength={14}
+                inputMode="numeric"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Obrigatório para validação. {anonymous ? "Não será divulgado." : "Vinculado à sua conta."}
+              </p>
+            </div>
+
             {/* Category */}
-            <div className="mt-6">
+            <div className="mt-5">
               <p className="mb-3 text-sm font-semibold text-foreground">Categoria</p>
               <div className="grid grid-cols-3 gap-2">
                 {categories.map((cat) => (
@@ -206,6 +262,14 @@ export default function ReportPage() {
               </p>
             </div>
 
+            {/* Content policy notice */}
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/50 p-3">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-xs text-muted-foreground">
+                Conteúdos impróprios, ofensivos ou que contenham ameaças serão bloqueados automaticamente.
+              </p>
+            </div>
+
             {/* Submit */}
             <Button
               onClick={handleSubmit}
@@ -227,6 +291,12 @@ export default function ReportPage() {
               <CheckCircle2 className="h-10 w-10 text-status-resolved" strokeWidth={1.5} />
             </div>
             <h2 className="mt-6 text-xl font-bold text-foreground">Solicitação registrada</h2>
+            {anonymous && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-primary">
+                <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+                Denúncia anônima
+              </p>
+            )}
             <p className="mt-2 text-center text-sm text-muted-foreground">
               Seu protocolo é
             </p>
