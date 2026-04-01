@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { validateCPF, formatCPF, containsInappropriateContent } from "@/lib/content-filter";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const categories: RequestCategory[] = ["buraco", "iluminacao", "lixo", "calcada", "sinalizacao", "outros"];
 const urgencyLevels: UrgencyLevel[] = ["baixa", "media", "urgente", "critica"];
