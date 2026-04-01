@@ -44,6 +44,57 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          address: string
+          anonymous: boolean
+          category: string
+          cpf: string
+          created_at: string
+          description: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          protocol: string
+          status: string
+          updated_at: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          anonymous?: boolean
+          category: string
+          cpf: string
+          created_at?: string
+          description: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          protocol: string
+          status?: string
+          updated_at?: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          anonymous?: boolean
+          category?: string
+          cpf?: string
+          created_at?: string
+          description?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          protocol?: string
+          status?: string
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
