@@ -30,7 +30,12 @@ export default function ReportPage() {
   const [anonymous, setAnonymous] = useState(false);
   const [cpf, setCpf] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para enviar uma denúncia.");
+      navigate("/auth");
+      return;
+    }
     if (!category) {
       toast.error("Selecione uma categoria.");
       return;
@@ -63,7 +68,31 @@ export default function ReportPage() {
       toast.error("CPF inválido. Verifique o número informado.");
       return;
     }
+
+    setSubmitting(true);
     const newProtocol = `ZEL-2026-${Math.floor(Math.random() * 9000) + 1000}`;
+
+    const { error } = await supabase.from("reports").insert({
+      user_id: user.id,
+      category,
+      description: description.trim(),
+      address: address.trim(),
+      urgency,
+      protocol: newProtocol,
+      cpf: cpf.replace(/\D/g, ""),
+      anonymous,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+    } as any);
+
+    setSubmitting(false);
+
+    if (error) {
+      toast.error("Erro ao enviar denúncia. Tente novamente.");
+      console.error("Insert error:", error);
+      return;
+    }
+
     setProtocol(newProtocol);
     setStep("success");
   };
