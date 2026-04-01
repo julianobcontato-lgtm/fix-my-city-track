@@ -308,8 +308,9 @@ export default function ReportPage() {
               onClick={handleSubmit}
               className="mt-6 w-full active-press"
               size="lg"
+              disabled={submitting}
             >
-              Enviar Solicitação
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</> : "Enviar Solicitação"}
             </Button>
           </motion.div>
         ) : (
