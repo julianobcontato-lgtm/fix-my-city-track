@@ -4,6 +4,11 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+export default defineConfig({
+  base: "/NOME-DO-REPOSITORIO/", // Ex: "/fix-my-city-track/"
+  // ... resto da configuração
+});
+
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
