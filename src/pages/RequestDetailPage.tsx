@@ -149,7 +149,7 @@ export default function RequestDetailPage() {
     );
   }
 
-  const canManage = isAdmin || request.userId === user?.id;
+  const canManage = !!request;
 
   return (
     <div className="flex flex-col pb-20">
