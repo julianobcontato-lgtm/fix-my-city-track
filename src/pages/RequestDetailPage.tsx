@@ -1,9 +1,13 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Building2, Calendar } from "lucide-react";
-import { mockRequests, categoryLabels, categoryIcons } from "@/lib/mock-data";
+import { ArrowLeft, MapPin, Building2, Calendar, Loader2 } from "lucide-react";
+import { categoryLabels, categoryIcons, type ServiceRequest } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ProgressTimeline } from "@/components/ProgressTimeline";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { mapReportToRequest } from "@/lib/reports";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("pt-BR", {
@@ -22,7 +26,57 @@ function resolvedHours(created: string, resolved: string) {
 
 export default function RequestDetailPage() {
   const { id } = useParams();
-  const request = mockRequests.find((r) => r.id === id);
+  const { user, loading: authLoading } = useAuth();
+  const [request, setRequest] = useState<ServiceRequest | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user || !id) {
+      setRequest(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadReport() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Report detail load error:", error);
+        setRequest(null);
+      } else {
+        setRequest(data ? mapReportToRequest(data) : null);
+      }
+
+      setLoading(false);
+    }
+
+    loadReport();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, id, user]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center gap-2 text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Carregando solicitação...</span>
+      </div>
+    );
+  }
 
   if (!request) {
     return (

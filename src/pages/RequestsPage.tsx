@@ -1,9 +1,12 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
-import { mockRequests, type RequestStatus } from "@/lib/mock-data";
+import { Loader2, MapPin } from "lucide-react";
+import { type RequestStatus, type ServiceRequest } from "@/lib/mock-data";
 import { RequestCard } from "@/components/RequestCard";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { mapReportToRequest } from "@/lib/reports";
 
 const statusFilters: { label: string; value: RequestStatus | "all" }[] = [
   { label: "Todos", value: "all" },
@@ -18,24 +21,65 @@ function extractBairro(address: string): string {
 }
 
 export default function RequestsPage() {
+  const { user, loading: authLoading } = useAuth();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">("all");
   const [bairroFilter, setBairroFilter] = useState<string>("all");
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadReports() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Reports load error:", error);
+        setRequests([]);
+      } else {
+        setRequests((data ?? []).map(mapReportToRequest));
+      }
+
+      setLoading(false);
+    }
+
+    loadReports();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
 
   const bairros = useMemo(() => {
-    const set = new Set(mockRequests.map((r) => extractBairro(r.address)));
+    const set = new Set(requests.map((r) => extractBairro(r.address)));
     return Array.from(set).sort();
-  }, []);
+  }, [requests]);
 
   const bairroStats = useMemo(() => {
     const map: Record<string, number> = {};
-    mockRequests.forEach((r) => {
+    requests.forEach((r) => {
       const b = extractBairro(r.address);
       map[b] = (map[b] || 0) + 1;
     });
     return map;
-  }, []);
+  }, [requests]);
 
-  const filtered = mockRequests.filter((r) => {
+  const filtered = requests.filter((r) => {
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
     const matchBairro = bairroFilter === "all" || extractBairro(r.address) === bairroFilter;
     return matchStatus && matchBairro;
@@ -45,7 +89,7 @@ export default function RequestsPage() {
     <div className="flex flex-col pb-20">
       <div className="px-5 pt-6">
         <h1 className="text-2xl font-bold text-foreground">Meus Pedidos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{mockRequests.length} solicitações registradas</p>
+        <p className="mt-1 text-sm text-muted-foreground">{requests.length} solicitações registradas</p>
       </div>
 
       {/* Status Filters */}
@@ -101,13 +145,18 @@ export default function RequestsPage() {
 
       {/* List */}
       <div className="mt-4 space-y-3 px-5">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando solicitações...
+          </div>
+        ) : filtered.length === 0 ? (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="py-12 text-center text-sm text-muted-foreground"
           >
-            Nenhuma solicitação encontrada.
+            {user ? "Nenhuma solicitação encontrada." : "Faça login para ver suas solicitações."}
           </motion.p>
         ) : (
           filtered.map((r, i) => <RequestCard key={r.id} request={r} index={i} />)
