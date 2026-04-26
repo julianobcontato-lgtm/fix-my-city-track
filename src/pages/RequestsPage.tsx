@@ -24,13 +24,14 @@ function extractBairro(address: string): string {
 
 export default function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">("all");
   const [bairroFilter, setBairroFilter] = useState<string>("all");
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminLoading) return;
 
     if (!user) {
       setRequests([]);
@@ -42,11 +43,16 @@ export default function RequestsPage() {
 
     async function loadReports() {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("reports")
         .select("*")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+      if (!isAdmin) {
+        query = query.eq("user_id", user!.id);
+      }
+
+      const { data, error } = await query;
 
       if (cancelled) return;
 
@@ -65,7 +71,7 @@ export default function RequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user]);
+  }, [authLoading, adminLoading, user, isAdmin]);
 
   const bairros = useMemo(() => {
     const set = new Set(requests.map((r) => extractBairro(r.address)));
