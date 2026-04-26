@@ -96,7 +96,17 @@ export default function RequestsPage() {
   return (
     <div className="flex flex-col pb-20">
       <div className="px-5 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">Meus Pedidos</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground">
+            {isAdmin ? "Todas as Solicitações" : "Meus Pedidos"}
+          </h1>
+          {isAdmin && (
+            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <ShieldCheck className="h-3 w-3" strokeWidth={2} />
+              ADMIN
+            </span>
+          )}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">{requests.length} solicitações registradas</p>
       </div>
 
