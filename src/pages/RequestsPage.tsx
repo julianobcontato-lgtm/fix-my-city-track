@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { mapReportToRequest } from "@/lib/reports";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { ShieldCheck } from "lucide-react";
 
 const statusFilters: { label: string; value: RequestStatus | "all" }[] = [
   { label: "Todos", value: "all" },
