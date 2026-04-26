@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { mapReportToRequest } from "@/lib/reports";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { ShieldCheck } from "lucide-react";
 
 const statusFilters: { label: string; value: RequestStatus | "all" }[] = [
   { label: "Todos", value: "all" },
@@ -22,13 +24,14 @@ function extractBairro(address: string): string {
 
 export default function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">("all");
   const [bairroFilter, setBairroFilter] = useState<string>("all");
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminLoading) return;
 
     if (!user) {
       setRequests([]);
@@ -40,11 +43,16 @@ export default function RequestsPage() {
 
     async function loadReports() {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("reports")
         .select("*")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+      if (!isAdmin) {
+        query = query.eq("user_id", user!.id);
+      }
+
+      const { data, error } = await query;
 
       if (cancelled) return;
 
@@ -63,7 +71,7 @@ export default function RequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user]);
+  }, [authLoading, adminLoading, user, isAdmin]);
 
   const bairros = useMemo(() => {
     const set = new Set(requests.map((r) => extractBairro(r.address)));
@@ -88,7 +96,17 @@ export default function RequestsPage() {
   return (
     <div className="flex flex-col pb-20">
       <div className="px-5 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">Meus Pedidos</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground">
+            {isAdmin ? "Todas as Solicitações" : "Meus Pedidos"}
+          </h1>
+          {isAdmin && (
+            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <ShieldCheck className="h-3 w-3" strokeWidth={2} />
+              ADMIN
+            </span>
+          )}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">{requests.length} solicitações registradas</p>
       </div>
 

@@ -1,13 +1,34 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Building2, Calendar, Loader2 } from "lucide-react";
-import { categoryLabels, categoryIcons, type ServiceRequest } from "@/lib/mock-data";
+import { ArrowLeft, MapPin, Building2, Calendar, Loader2, Trash2, ShieldCheck } from "lucide-react";
+import { categoryLabels, categoryIcons, type ServiceRequest, type RequestStatus } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ProgressTimeline } from "@/components/ProgressTimeline";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { mapReportToRequest } from "@/lib/reports";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("pt-BR", {
@@ -24,14 +45,24 @@ function resolvedHours(created: string, resolved: string) {
   return Math.round(diff / 3600000);
 }
 
+const statusDbValues: Record<RequestStatus, string> = {
+  pending: "pendente",
+  progress: "em_andamento",
+  resolved: "resolvido",
+};
+
 export default function RequestDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [request, setRequest] = useState<ServiceRequest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminLoading) return;
 
     if (!user || !id) {
       setRequest(null);
@@ -43,12 +74,11 @@ export default function RequestDetailPage() {
 
     async function loadReport() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("reports")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .maybeSingle();
+      let query = supabase.from("reports").select("*").eq("id", id!);
+      if (!isAdmin) {
+        query = query.eq("user_id", user!.id);
+      }
+      const { data, error } = await query.maybeSingle();
 
       if (cancelled) return;
 
@@ -67,7 +97,40 @@ export default function RequestDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, id, user]);
+  }, [authLoading, adminLoading, id, user, isAdmin]);
+
+  async function handleStatusChange(newStatus: RequestStatus) {
+    if (!request) return;
+    setUpdating(true);
+    const { error } = await supabase
+      .from("reports")
+      .update({ status: statusDbValues[newStatus] })
+      .eq("id", request.id);
+    setUpdating(false);
+
+    if (error) {
+      console.error("Update status error:", error);
+      toast.error("Erro ao atualizar status");
+      return;
+    }
+    toast.success("Status atualizado");
+    setRequest({ ...request, status: newStatus });
+  }
+
+  async function handleDelete() {
+    if (!request) return;
+    setDeleting(true);
+    const { error } = await supabase.from("reports").delete().eq("id", request.id);
+    setDeleting(false);
+
+    if (error) {
+      console.error("Delete error:", error);
+      toast.error("Erro ao excluir solicitação");
+      return;
+    }
+    toast.success("Solicitação excluída");
+    navigate("/requests");
+  }
 
   if (loading) {
     return (
@@ -85,6 +148,8 @@ export default function RequestDetailPage() {
       </div>
     );
   }
+
+  const canManage = !!request;
 
   return (
     <div className="flex flex-col pb-20">
@@ -136,6 +201,61 @@ export default function RequestDetailPage() {
             <p className="text-sm font-semibold text-status-resolved">
               Resolvido em {resolvedHours(request.createdAt, request.resolvedAt)}h
             </p>
+          </div>
+        )}
+
+        {/* Admin / Owner actions */}
+        {canManage && (
+          <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-card">
+            {isAdmin && (
+              <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-primary">
+                <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                Painel do administrador
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="mb-4">
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                  Alterar status
+                </label>
+                <Select
+                  value={request.status}
+                  onValueChange={(v) => handleStatusChange(v as RequestStatus)}
+                  disabled={updating}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="progress">Em andamento</SelectItem>
+                    <SelectItem value="resolved">Resolvido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="w-full" disabled={deleting}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {deleting ? "Excluindo..." : "Excluir solicitação"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir solicitação?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. A solicitação {request.protocol} será removida permanentemente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
 
